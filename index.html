@@ -1,0 +1,859 @@
+<!--
+  FaceApp — K-Kod
+  Author: شادمان احمد سامی رشید (author name intentionally not rendered anywhere in the UI)
+  Single-file static site — works on GitHub Pages, Netlify, Vercel, or any static host with zero build step.
+-->
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceApp — چات و سۆشیال بە وەرگێڕانی خۆکار</title>
+<meta name="description" content="FaceApp: سۆشیال میدیا + چاتی وەرگێڕانی خۆکار بۆ هەموو زمانەکان">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;900&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0F3D3E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FaceApp">
+<link rel="manifest" id="manifestLink" href="">
+<link rel="icon" id="iconLink" href="">
+<link rel="apple-touch-icon" id="appleIcon" href="">
+<style>
+  :root{
+    --teal-deep:#0F3D3E;
+    --teal:#2E7D6B;
+    --amber:#E8A33D;
+    --cream:#FBF7F0;
+    --ink:#1B1B1B;
+    --red:#D64545;
+    --line:#E4DDCE;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:"Noto Sans Arabic","Noto Kufi Arabic",sans-serif;
+    line-height:1.9;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.brand{
+    font-family:"Noto Kufi Arabic",sans-serif;
+  }
+  [dir-ltr], .ltr-num{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+  a{color:inherit;}
+  button{font-family:inherit;cursor:pointer;border:none;}
+  img{max-width:100%;display:block;}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:var(--teal-deep);
+    color:#fff;
+    padding:14px 20px;
+    display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);
+  }
+  .brand{ font-size:22px; font-weight:900; color:var(--amber); letter-spacing:.5px; }
+  nav{ display:flex; gap:6px; }
+  nav button{
+    background:transparent; color:#fff; padding:8px 14px; border-radius:999px; font-size:14px; font-weight:600;
+    transition:.2s;
+  }
+  nav button.active, nav button:hover{ background:rgba(232,163,61,.18); color:var(--amber); }
+
+  main{ max-width:640px; margin:0 auto; padding:18px 14px 80px; }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    background:linear-gradient(160deg,var(--teal-deep),var(--teal));
+    color:#fff; border-radius:var(--radius); padding:28px 22px; margin-bottom:22px;
+    position:relative; overflow:hidden;
+  }
+  .hero h1{ font-size:26px; margin:0 0 10px; }
+  .hero p{ margin:0 0 16px; opacity:.92; font-size:15px; }
+  .hero .badge{
+    display:inline-flex; align-items:center; gap:6px;
+    background:rgba(255,255,255,.15); padding:6px 12px; border-radius:999px; font-size:13px; margin-bottom:14px;
+  }
+  .cta-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .btn{ padding:12px 20px; border-radius:12px; font-weight:700; font-size:15px; }
+  .btn-primary{ background:var(--amber); color:var(--teal-deep); }
+  .btn-ghost{ background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.4); }
+  .btn:active{ transform:scale(.97); }
+
+  /* ---------- Cards / Feed ---------- */
+  .card{
+    background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; margin-bottom:14px;
+  }
+  .post-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .avatar{
+    width:42px;height:42px;border-radius:50%;
+    background:linear-gradient(135deg,var(--amber),var(--teal));
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;
+  }
+  .post-name{ font-weight:700; font-size:15px; }
+  .post-time{ font-size:12px; color:#8a8578; }
+  .post-body{ font-size:15px; margin-bottom:10px; }
+  .post-actions{ display:flex; gap:8px; border-top:1px solid var(--line); padding-top:10px; }
+  .post-actions button{
+    flex:1; background:var(--cream); padding:9px; border-radius:10px; font-size:13px; font-weight:600; color:var(--teal-deep);
+  }
+  .post-actions button.liked{ color:var(--red); background:#fdecec; }
+  .new-post{ display:flex; gap:8px; margin-bottom:16px; }
+  .new-post input{
+    flex:1; padding:12px 14px; border-radius:12px; border:1px solid var(--line); font-family:inherit; font-size:14px; background:#fff;
+  }
+  .new-post button{ background:var(--teal); color:#fff; padding:0 18px; border-radius:12px; font-weight:700; }
+
+  /* ---------- Chat ---------- */
+  .chat-wrap{ display:flex; flex-direction:column; height:calc(100vh - 170px); min-height:420px; }
+  .chat-setup{ display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+  .chat-setup select{
+    flex:1; padding:10px; border-radius:10px; border:1px solid var(--line); background:#fff; font-family:inherit;
+  }
+  .chat-log{
+    flex:1; overflow-y:auto; background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px; display:flex; flex-direction:column; gap:10px;
+  }
+  .msg{ max-width:80%; padding:10px 14px; border-radius:16px; font-size:14px; position:relative; }
+  .msg.me{ align-self:flex-start; background:var(--teal); color:#fff; border-bottom-left-radius:4px; }
+  .msg.them{ align-self:flex-end; background:var(--cream); border:1px solid var(--line); border-bottom-right-radius:4px; }
+  .msg .orig{ opacity:.7; font-size:11.5px; margin-top:4px; display:block; }
+  .msg.translating .orig{ display:flex; align-items:center; gap:5px; }
+  .dot-pulse{ display:inline-flex; gap:2px; }
+  .dot-pulse span{ width:4px;height:4px;border-radius:50%;background:currentColor;animation:pulse 1s infinite ease-in-out; }
+  .dot-pulse span:nth-child(2){ animation-delay:.15s; }
+  .dot-pulse span:nth-child(3){ animation-delay:.3s; }
+  @keyframes pulse{ 0%,80%,100%{opacity:.25;} 40%{opacity:1;} }
+  .chat-input{ display:flex; gap:8px; margin-top:10px; }
+  .chat-input input{
+    flex:1; padding:13px 14px; border-radius:14px; border:1px solid var(--line); font-family:inherit; font-size:14px;
+  }
+  .chat-input button{ background:var(--amber); color:var(--teal-deep); padding:0 20px; border-radius:14px; font-weight:800; }
+
+  /* ---------- Business / Pricing ---------- */
+  .price-card{
+    background:var(--teal-deep); color:#fff; border-radius:var(--radius); padding:22px; margin-bottom:16px; text-align:center;
+  }
+  .price-card .amount{ font-size:38px; font-weight:900; color:var(--amber); }
+  .price-card .amount small{ font-size:16px; color:#fff; font-weight:600; }
+  .pay-method{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px;
+  }
+  .pay-method .label{ font-weight:700; font-size:14px; }
+  .pay-method .value{ font-size:15px; font-weight:700; color:var(--teal-deep); }
+  .copy-btn{ background:var(--cream); color:var(--teal-deep); padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; }
+  .steps{ counter-reset:step; list-style:none; padding:0; margin:0 0 16px; }
+  .steps li{
+    counter-increment:step; position:relative; padding:10px 0 10px 0; padding-inline-start:40px;
+    font-size:14.5px; border-bottom:1px dashed var(--line);
+  }
+  .steps li::before{
+    content:counter(step); position:absolute; inline-size:26px; block-size:26px; border-radius:50%;
+    background:var(--amber); color:var(--teal-deep); font-weight:800; display:flex; align-items:center; justify-content:center;
+    inset-inline-start:0; top:8px; font-size:13px;
+  }
+  .wa-btn{
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    background:#25D366; color:#fff; padding:14px; border-radius:14px; font-weight:800; font-size:15px; margin-top:6px;
+  }
+  .form-field{ margin-bottom:10px; }
+  .form-field label{ display:block; font-size:13px; font-weight:700; margin-bottom:5px; }
+  .form-field input, .form-field textarea{
+    width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line); font-family:inherit; font-size:14px; background:#fff;
+  }
+  .note{ font-size:12.5px; color:#8a8578; background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+
+  footer{ text-align:center; padding:24px; font-size:12px; color:#8a8578; }
+
+  @media (prefers-reduced-motion: reduce){ .dot-pulse span{ animation:none; } }
+
+  @media (max-width:420px){
+    .hero h1{ font-size:22px; }
+    .price-card .amount{ font-size:32px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">FaceApp</div>
+  <nav id="nav">
+    <button data-view="home" class="active">ماڵەوە</button>
+    <button data-view="feed">تایملاین</button>
+    <button data-view="chat">چات</button>
+    <button data-view="account">هەژمار</button>
+    <button data-view="business">بازرگانی</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- HOME -->
+  <section class="view active" id="view-home">
+    <div class="hero">
+      <span class="badge">🌐 وەرگێڕانی خۆکار لە کاتی ڕاستەقینەدا</span>
+      <h1>FaceApp — سۆشیال + چات، بێ سنووری زمان</h1>
+      <p>هەستوگوزار بکە، وتووێژ بکە، پۆست بلاوبکەرەوە لەگەڵ هەرکەسێک لە جیهاندا — هەرکەس بە زمانی خۆی دەخوێنێتەوە و وەڵام دەداتەوە.</p>
+      <div class="cta-row">
+        <button class="btn btn-primary" data-view="chat">دەستپێکردنی چات</button>
+        <button class="btn btn-ghost" data-view="business">بۆ بازرگانان</button>
+      </div>
+    </div>
+
+    <div class="card" id="installCard">
+      <h3>📲 دامەزراندنی FaceApp وەک ئەپ</h3>
+      <p style="font-size:14px;">لەسەر مۆبایل کۆدی QR سکان بکە، پاشان لە مێنیوی براوسەرەکە <b>Add to Home Screen / دامەزراندن</b> هەڵبژێرە — لۆگۆی FaceApp لەسەر مۆبایلەکەت زیاد دەبێت وەک ئەپێکی ئاسایی.</p>
+      <div style="display:flex;justify-content:center;margin:10px 0;">
+        <img id="qrImg" alt="QR code" width="180" height="180" style="border-radius:12px;border:1px solid var(--line);">
+      </div>
+      <button class="btn btn-primary" id="installBtn" style="width:100%;display:none;">دامەزراندنی ڕاستەوخۆ لەسەر ئەم ئامێرە</button>
+      <p class="note" style="margin-top:10px;">ئایفۆن (Safari): دوگمەی هاوبەشکردن ⬆️ داگرە ← <b>Add to Home Screen</b>.</p>
+    </div>
+
+    <div class="card">
+      <h3>🗨️ چات بە وەرگێڕانی خۆکار</h3>
+      <p>کاتێک کوردێک لەگەڵ کەسێکی بیانی (بۆ نموونە تایلاندی) دەدوێت، هەر پەیامێک خۆکارانە دەگۆڕدرێت بۆ زمانی وەرگری براوسەرەکەی — بەبێ هیچ ڕێکخستنێکی زیادە.</p>
+    </div>
+    <div class="card">
+      <h3>📰 تایملاینی گشتی</h3>
+      <p>پۆست، لایک و کۆمێنت — وەک ڕووکاری ناسراوی سۆشیال میدیا، بەڵام بە زمانی کوردی و RTL ڕاستەوخۆ.</p>
+    </div>
+    <div class="card">
+      <h3>💼 هەژماری بازرگانی</h3>
+      <p>بازرگانان بۆ ١٠$ (یان بەهای دیناری هاوتا) بە مانگێک دەتوانن هەژمارێکی تایبەت چالاک بکەن.</p>
+    </div>
+  </section>
+
+  <!-- FEED -->
+  <section class="view" id="view-feed">
+    <p class="note" id="feedLoginNote" style="display:none;margin-bottom:10px;"></p>
+    <div class="new-post">
+      <input id="postInput" type="text" placeholder="لە بیرت چییە؟">
+      <button id="postBtn">بڵاوکردنەوە</button>
+    </div>
+    <div id="feedList"></div>
+  </section>
+
+  <!-- CHAT -->
+  <section class="view" id="view-chat">
+    <div class="chat-wrap">
+      <div class="chat-setup">
+        <select id="myLang">
+          <option value="ckb">من: کوردی (سۆرانی)</option>
+          <option value="ar">من: عەرەبی</option>
+          <option value="en">من: ئینگلیزی</option>
+          <option value="zh">من: چینی</option>
+        </select>
+        <select id="theirLang">
+          <option value="en">ئەوان: ئینگلیزی</option>
+          <option value="th">ئەوان: تایلەندی</option>
+          <option value="ar">ئەوان: عەرەبی</option>
+          <option value="tr">ئەوان: تورکی</option>
+          <option value="fa">ئەوان: فارسی</option>
+          <option value="zh">ئەوان: چینی</option>
+          <option value="ckb">ئەوان: کوردی</option>
+        </select>
+      </div>
+      <div class="note" id="chatLockNote" style="margin-bottom:10px;"></div>
+      <div class="chat-log" id="chatLog"></div>
+      <div class="chat-input">
+        <input id="chatInput" type="text" placeholder="پەیامێک بنووسە...">
+        <button id="chatSend">ناردن</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCOUNT -->
+  <section class="view" id="view-account">
+    <p class="note" id="fbConfigNote" style="display:none;margin-bottom:12px;"></p>
+
+    <div id="authLoggedOut">
+      <div class="card">
+        <h3>هەژمار</h3>
+        <div class="form-field">
+          <label>ناو</label>
+          <input id="authName" type="text" placeholder="ناوی نیشاندان">
+        </div>
+        <div class="form-field">
+          <label>ئیمەیل</label>
+          <input id="authEmail" type="email" placeholder="you@example.com">
+        </div>
+        <div class="form-field">
+          <label>وشەی نهێنی</label>
+          <input id="authPass" type="password" placeholder="لانیکەم ٦ پیت">
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" id="signupBtn" style="flex:1;">دروستکردنی هەژمار</button>
+          <button class="btn btn-ghost" id="loginBtn" style="flex:1;background:var(--teal);color:#fff;border:none;">چوونەژوورەوە</button>
+        </div>
+        <p id="authError" style="color:var(--red);font-size:13px;font-weight:700;margin-bottom:0;"></p>
+      </div>
+    </div>
+
+    <div id="authLoggedIn" style="display:none;">
+      <div class="card" style="text-align:center;">
+        <div class="avatar" id="acctAvatar" style="margin:0 auto 10px;width:60px;height:60px;font-size:22px;"></div>
+        <h3 id="acctName" style="margin-bottom:2px;"></h3>
+        <p id="acctEmail" style="color:#8a8578;font-size:13px;margin-top:0;"></p>
+        <button class="btn btn-ghost" id="logoutBtn" style="background:var(--red);color:#fff;">چوونەدەرەوە</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUSINESS -->
+  <section class="view" id="view-business">
+    <div class="price-card">
+      <div>هەژماری بازرگانی — چالاککردنی وەرگێڕانی نامحدود</div>
+      <div class="amount"><span class="ltr-num">$10</span> <small>/ مانگ</small></div>
+      <div style="margin-top:6px;font-size:13px;opacity:.85;">یان بەهای هاوتای <span id="iqdAmount" class="ltr-num">—</span> IQD</div>
+    </div>
+
+    <div class="card">
+      <h3>هەنگاوەکانی چالاککردن</h3>
+      <ol class="steps">
+        <li>پارەکە بنێرە بۆ یەکێک لەم ڕێگایانە خوارەوە.</li>
+        <li>وێنەی شاشە یان پسوولەی پارەدان وەربگرە.</li>
+        <li>لە دوگمەی وەتسئەپی خوارەوە بینێرە بۆ پشتڕاستکردنەوە.</li>
+        <li>دوای پشتڕاستکردنەوە، هەژمارەکەت چالاک دەبێت.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h3>ڕێگاکانی پارەدان</h3>
+      <div class="pay-method">
+        <div>
+          <div class="label">کی کارت (Kiwi Card)</div>
+          <div class="value ltr-num" id="kiwiNum">9589 5060 30</div>
+        </div>
+        <button class="copy-btn" data-copy="9589506030">کۆپی</button>
+      </div>
+      <div class="pay-method">
+        <div>
+          <div class="label">FastPay / FIB</div>
+          <div class="value ltr-num" id="phoneNum">+964 750 490 9260</div>
+        </div>
+        <button class="copy-btn" data-copy="+9647504909260">کۆپی</button>
+      </div>
+      <a class="wa-btn" id="waLink" href="#" target="_blank" rel="noopener">
+        📎 ناردنی پسوولە بۆ وەتسئەپ
+      </a>
+    </div>
+
+    <div class="card">
+      <h3>چالاککردنی هەژمار</h3>
+      <p style="font-size:13.5px;color:#8a8578;margin-top:0;">دوای پشتڕاستکردنەوەی پارەدان لە وەتسئەپەوە، کۆدی چالاککردن پێت دەدرێت — لێرە بینووسە.</p>
+      <div class="form-field">
+        <label>کۆدی چالاککردن</label>
+        <input id="activationCode" type="text" placeholder="کۆدەکە بنووسە">
+      </div>
+      <button class="btn btn-primary" id="activateBtn" style="width:100%;">چالاککردن</button>
+      <p id="activationStatus" style="font-size:13.5px;font-weight:700;margin-bottom:0;"></p>
+    </div>
+
+    <div class="card">
+      <h3>داواکاری هەژماری بازرگانی</h3>
+      <div class="form-field">
+        <label>ناوی بازرگانی</label>
+        <input id="bizName" type="text" placeholder="ناوی کۆمپانیا/فرۆشگا">
+      </div>
+      <div class="form-field">
+        <label>ژمارەی تەلەفۆن</label>
+        <input id="bizPhone" type="tel" placeholder="+964...">
+      </div>
+      <button class="btn btn-primary" id="bizRequestBtn" style="width:100%;">ناردنی داواکاری بۆ وەتسئەپ</button>
+    </div>
+
+    <p class="note">تێبینی: چالاککردن بە دەستی دەبێت — دوای وەرگرتنی پسوولەکەت لە وەتسئەپ، بەم زووانە هەژمارەکەت پشتڕاست دەکرێتەوە و چالاک دەبێت.</p>
+  </section>
+
+</main>
+
+<footer>FaceApp · K-Kod</footer>
+
+<!-- Firebase (optional — only activates once FIREBASE_CONFIG below is filled in) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Config ---------------- */
+  var PHONE = "9647504909260"; // WhatsApp number (international, no +)
+  var USD_TO_IQD = 1450; // approximate rate; edit as needed
+  var ACTIVATION_CODE = "FACEAPP-BIZ-2025"; // shared code given to a business after payment is confirmed on WhatsApp — change any time
+  var ACTIVE_KEY = "faceapp_business_active";
+  function isBusinessActive(){
+    try { return localStorage.getItem(ACTIVE_KEY) === "1"; } catch(e){ return false; }
+  }
+
+  /* ---------------- Firebase (accounts + shared public feed) ---------------- */
+  // 1) Create a free project at https://console.firebase.google.com
+  // 2) Enable Authentication → Email/Password, and Firestore Database (start in test mode, then lock down rules — see README)
+  // 3) Project settings → your web app → copy the config values below
+  var FIREBASE_CONFIG = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  var FIREBASE_READY = !!(window.firebase && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey.indexOf("YOUR_") !== 0);
+  var auth = null, db = null, currentUser = null;
+
+  if (FIREBASE_READY) {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      auth = firebase.auth();
+      db = firebase.firestore();
+    } catch(e){ FIREBASE_READY = false; }
+  }
+
+  var fbNote = document.getElementById("fbConfigNote");
+  if (!FIREBASE_READY && fbNote) {
+    fbNote.style.display = "block";
+    fbNote.textContent = "تێبینی گەشەپێدەر: Firebase ڕێکنەخراوە — ئێستا هەژمار و پۆستەکان تەنها لەسەر ئەم ئامێرە (local demo) هەڵدەگیرێن، بۆ هەموو بەکارهێنەران بڵاو نابنەوە. بڕوانە README بۆ چۆنیەتی چالاککردنی هەژماری ڕاستەقینە.";
+  }
+
+  function renderAccountView(){
+    var loggedOut = document.getElementById("authLoggedOut");
+    var loggedIn = document.getElementById("authLoggedIn");
+    if (!loggedOut || !loggedIn) return;
+    if (currentUser) {
+      loggedOut.style.display = "none";
+      loggedIn.style.display = "block";
+      var name = currentUser.displayName || currentUser.email || "بەکارهێنەر";
+      document.getElementById("acctAvatar").textContent = initial(name);
+      document.getElementById("acctName").textContent = name;
+      document.getElementById("acctEmail").textContent = currentUser.email || "";
+    } else {
+      loggedOut.style.display = "block";
+      loggedIn.style.display = "none";
+    }
+  }
+
+  function renderFeedComposerState(){
+    var note = document.getElementById("feedLoginNote");
+    var input = document.getElementById("postInput");
+    var btn = document.getElementById("postBtn");
+    if (!note || !input || !btn) return;
+    if (FIREBASE_READY && !currentUser) {
+      note.style.display = "block";
+      note.innerHTML = "بۆ پۆستکردن پێویستە چوونەژوورەوە. <button data-view=\"account\" style=\"background:none;border:none;text-decoration:underline;color:var(--teal-deep);font-weight:700;cursor:pointer;padding:0;\">چوونەژوورەوە</button>";
+      var goBtn = note.querySelector("[data-view]");
+      if (goBtn) goBtn.addEventListener("click", function(){ showView("account"); });
+      input.disabled = true;
+      btn.disabled = true;
+      input.placeholder = "پێویستە چوونەژوورەوە...";
+    } else {
+      note.style.display = "none";
+      input.disabled = false;
+      btn.disabled = false;
+      input.placeholder = "لە بیرت چییە؟";
+    }
+  }
+
+  if (FIREBASE_READY) {
+    auth.onAuthStateChanged(function(user){
+      currentUser = user;
+      renderAccountView();
+      renderFeedComposerState();
+    });
+
+    document.getElementById("signupBtn").addEventListener("click", function(){
+      var name = document.getElementById("authName").value.trim();
+      var email = document.getElementById("authEmail").value.trim();
+      var pass = document.getElementById("authPass").value;
+      var errEl = document.getElementById("authError");
+      errEl.textContent = "";
+      if (!name || !email || !pass) { errEl.textContent = "تکایە هەموو خانەکان پڕبکەرەوە."; return; }
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then(function(cred){ return cred.user.updateProfile({ displayName: name }); })
+        .then(function(){ currentUser = auth.currentUser; renderAccountView(); renderFeedComposerState(); showView("feed"); })
+        .catch(function(e){ errEl.textContent = e.message; });
+    });
+
+    document.getElementById("loginBtn").addEventListener("click", function(){
+      var email = document.getElementById("authEmail").value.trim();
+      var pass = document.getElementById("authPass").value;
+      var errEl = document.getElementById("authError");
+      errEl.textContent = "";
+      if (!email || !pass) { errEl.textContent = "تکایە ئیمەیل و وشەی نهێنی بنووسە."; return; }
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(function(){ showView("feed"); })
+        .catch(function(e){ errEl.textContent = e.message; });
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", function(){
+      auth.signOut();
+    });
+  }
+
+  /* ---------------- PWA: icon, manifest, install, QR ---------------- */
+  var ICON_512 = "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";
+  var ICON_180 = "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";
+  (function setupPWA(){
+    var icon512Uri = "data:image/png;base64," + ICON_512;
+    var icon180Uri = "data:image/png;base64," + ICON_180;
+
+    document.getElementById("iconLink").href = icon512Uri;
+    document.getElementById("appleIcon").href = icon180Uri;
+
+    var manifest = {
+      name: "FaceApp",
+      short_name: "FaceApp",
+      start_url: ".",
+      scope: ".",
+      display: "standalone",
+      background_color: "#FBF7F0",
+      theme_color: "#0F3D3E",
+      icons: [
+        { src: icon512Uri, sizes: "512x512", type: "image/png", purpose: "any" },
+        { src: icon512Uri, sizes: "512x512", type: "image/png", purpose: "maskable" },
+        { src: icon180Uri, sizes: "180x180", type: "image/png", purpose: "any" }
+      ]
+    };
+    document.getElementById("manifestLink").href =
+      "data:application/manifest+json," + encodeURIComponent(JSON.stringify(manifest));
+
+    // Minimal service worker (network-first) registered from an in-memory blob — keeps this a single file.
+    if ("serviceWorker" in navigator) {
+      try {
+        var swCode = "self.addEventListener('fetch', function(e){" +
+          "e.respondWith(fetch(e.request).catch(function(){return caches.match(e.request);}));" +
+          "});";
+        var blob = new Blob([swCode], { type: "application/javascript" });
+        navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(function(){});
+      } catch(e){}
+    }
+
+    // QR code for scanning the current page URL on another device
+    var qr = document.getElementById("qrImg");
+    if (qr) {
+      qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(location.href);
+    }
+
+    // Native "Install" prompt (Chrome/Edge/Android)
+    var deferredPrompt = null;
+    var installBtn = document.getElementById("installBtn");
+    window.addEventListener("beforeinstallprompt", function(e){
+      e.preventDefault();
+      deferredPrompt = e;
+      if (installBtn) installBtn.style.display = "block";
+    });
+    if (installBtn) {
+      installBtn.addEventListener("click", function(){
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.finally(function(){ deferredPrompt = null; installBtn.style.display = "none"; });
+      });
+    }
+    window.addEventListener("appinstalled", function(){
+      if (installBtn) installBtn.style.display = "none";
+    });
+  })();
+
+
+  /* ---------------- Navigation ---------------- */
+  var navButtons = document.querySelectorAll("[data-view]");
+  function showView(name){
+    document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active"); });
+    var target = document.getElementById("view-" + name);
+    if (target) target.classList.add("active");
+    document.querySelectorAll("nav button[data-view]").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-view") === name);
+    });
+    window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  }
+  navButtons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var name = btn.getAttribute("data-view");
+      showView(name);
+      if (name === "chat") renderChatLock();
+    });
+  });
+
+  /* ---------------- Feed ---------------- */
+  var FEED_KEY = "faceapp_feed";
+  function loadFeed(){
+    try {
+      var raw = localStorage.getItem(FEED_KEY);
+      return raw ? JSON.parse(raw) : seedFeed();
+    } catch(e){ return seedFeed(); }
+  }
+  function seedFeed(){
+    return [
+      { name:"ئاراس ح.", text:"FaceApp تاقی کردەوە — چاتەکە بە زمانی ئینگلیزی وەرگێڕدرا، زۆر باش بوو!", likes:12, liked:false, time:"٢ کاتژمێر لەمەوپێش" },
+      { name:"سارا ک.", text:"وەک بازرگان بەکاریدەهێنم بۆ گفتوگۆ لەگەڵ کڕیارانی دەرەوەی وڵات.", likes:7, liked:false, time:"دوێنێ" }
+    ];
+  }
+  function saveFeed(list){
+    try { localStorage.setItem(FEED_KEY, JSON.stringify(list)); } catch(e){}
+  }
+  function initial(name){ return (name || "؟").trim().charAt(0).toUpperCase(); }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+
+  // Renders a normalized list: [{ id, name, text, likes, likedByMe, time }]
+  function renderPostsList(list, onLike){
+    var box = document.getElementById("feedList");
+    box.innerHTML = "";
+    list.forEach(function(post){
+      var card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML =
+        '<div class="post-head">' +
+          '<div class="avatar">' + initial(post.name) + '</div>' +
+          '<div><div class="post-name">' + escapeHtml(post.name) + '</div>' +
+            '<div class="post-time">' + escapeHtml(post.time) + '</div></div>' +
+        '</div>' +
+        '<div class="post-body">' + escapeHtml(post.text) + '</div>' +
+        '<div class="post-actions">' +
+          '<button class="like-btn ' + (post.likedByMe ? "liked" : "") + '" data-id="' + post.id + '">👍 پەسەندکردن (' + post.likes + ')</button>' +
+          '<button disabled>💬 کۆمێنت</button>' +
+          '<button disabled>↗️ هاوبەشکردن</button>' +
+        '</div>';
+      box.appendChild(card);
+    });
+    box.querySelectorAll(".like-btn").forEach(function(b){
+      b.addEventListener("click", function(){ onLike(b.getAttribute("data-id")); });
+    });
+  }
+
+  function renderFeedLocal(){
+    var list = loadFeed();
+    var normalized = list.map(function(p, idx){
+      return { id:String(idx), name:p.name, text:p.text, likes:p.likes, likedByMe:p.liked, time:p.time };
+    });
+    renderPostsList(normalized, function(id){
+      var arr = loadFeed();
+      var i = parseInt(id, 10);
+      if (!arr[i]) return;
+      arr[i].liked = !arr[i].liked;
+      arr[i].likes += arr[i].liked ? 1 : -1;
+      saveFeed(arr);
+      renderFeedLocal();
+    });
+  }
+
+  function formatFirestoreTime(ts){
+    if (!ts || !ts.toDate) return "ئێستا";
+    return ts.toDate().toLocaleString();
+  }
+
+  function renderFeedFirestore(snapshot){
+    var uid = currentUser ? currentUser.uid : null;
+    var normalized = [];
+    snapshot.forEach(function(doc){
+      var d = doc.data();
+      var likedBy = d.likedBy || [];
+      normalized.push({
+        id: doc.id,
+        name: d.name || "بەکارهێنەر",
+        text: d.text || "",
+        likes: likedBy.length,
+        likedByMe: !!(uid && likedBy.indexOf(uid) !== -1),
+        time: formatFirestoreTime(d.timestamp)
+      });
+    });
+    renderPostsList(normalized, function(id){
+      if (!currentUser) { showView("account"); return; }
+      var ref = db.collection("posts").doc(id);
+      db.runTransaction(function(t){
+        return t.get(ref).then(function(docSnap){
+          var likedBy = (docSnap.data() && docSnap.data().likedBy) || [];
+          var i = likedBy.indexOf(currentUser.uid);
+          if (i === -1) likedBy.push(currentUser.uid); else likedBy.splice(i, 1);
+          t.update(ref, { likedBy: likedBy });
+        });
+      }).catch(function(){});
+    });
+  }
+
+  if (FIREBASE_READY) {
+    db.collection("posts").orderBy("timestamp", "desc").limit(100)
+      .onSnapshot(renderFeedFirestore, function(){ /* ignore live errors */ });
+  } else {
+    renderFeedLocal();
+  }
+
+  document.getElementById("postBtn").addEventListener("click", function(){
+    var input = document.getElementById("postInput");
+    var text = input.value.trim();
+    if (!text) return;
+
+    if (FIREBASE_READY) {
+      if (!currentUser) { showView("account"); return; }
+      db.collection("posts").add({
+        uid: currentUser.uid,
+        name: currentUser.displayName || currentUser.email || "بەکارهێنەر",
+        text: text,
+        likedBy: [],
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function(){ input.value = ""; }).catch(function(e){ alert(e.message); });
+    } else {
+      var arr = loadFeed();
+      arr.unshift({ name:"من", text:text, likes:0, liked:false, time:"ئێستا" });
+      saveFeed(arr);
+      input.value = "";
+      renderFeedLocal();
+    }
+  });
+
+  renderFeedComposerState();
+
+  /* ---------------- Chat with live translation ---------------- */
+  var chatLog = document.getElementById("chatLog");
+  var langNames = { ckb:"کوردی", ar:"عەرەبی", en:"ئینگلیزی", th:"تایلەندی", tr:"تورکی", fa:"فارسی", zh:"چینی" };
+
+  function addMessage(text, who, showTranslating){
+    var wrap = document.createElement("div");
+    wrap.className = "msg " + who + (showTranslating ? " translating" : "");
+    wrap.innerHTML = '<div class="body">' + escapeHtml(text) + '</div>' +
+      (showTranslating
+        ? '<span class="orig"><span class="dot-pulse"><span></span><span></span><span></span></span> وەرگێڕان...</span>'
+        : "");
+    chatLog.appendChild(wrap);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    return wrap;
+  }
+
+  function finishTranslation(el, translated, sourceLangLabel, ok){
+    el.classList.remove("translating");
+    var origSpan = el.querySelector(".orig");
+    if (ok) {
+      origSpan.textContent = "وەرگێڕدراوە لە " + sourceLangLabel;
+      var body = el.querySelector(".body");
+      body.textContent = translated;
+    } else {
+      origSpan.textContent = "وەرگێڕان سەرکەوتوو نەبوو — دەقی ڕەسەن پیشان دەدرێت";
+    }
+  }
+
+  // Free, no-key translation via MyMemory. Falls back gracefully if blocked/unavailable.
+  var API_LANG_MAP = { zh: "zh-CN" }; // MyMemory expects zh-CN rather than bare "zh"
+  function apiLangCode(code){ return API_LANG_MAP[code] || code; }
+  function translateText(text, sourceLang, targetLang, cb){
+    if (sourceLang === targetLang) { cb(true, text); return; }
+    var url = "https://api.mymemory.translated.net/get?q=" + encodeURIComponent(text) +
+              "&langpair=" + encodeURIComponent(apiLangCode(sourceLang)) + "|" + encodeURIComponent(apiLangCode(targetLang));
+    fetch(url)
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var translated = data && data.responseData && data.responseData.translatedText;
+        if (translated) { cb(true, translated); } else { cb(false, text); }
+      })
+      .catch(function(){ cb(false, text); });
+  }
+
+  function renderChatLock(){
+    var note = document.getElementById("chatLockNote");
+    if (isBusinessActive()) {
+      note.textContent = "✅ وەرگێڕانی خۆکار چالاکە (هەژماری بازرگانی).";
+    } else {
+      note.innerHTML = "🔒 وەرگێڕانی خۆکار تەنها بۆ هەژماری بازرگانیی چالاکە — پەیامەکان بەبێ وەرگێڕان دەنێردرێن. <button data-view=\"business\" style=\"background:none;border:none;text-decoration:underline;color:var(--teal-deep);font-weight:700;cursor:pointer;padding:0;\">چالاکی بکە</button>";
+      var goBtn = note.querySelector("[data-view]");
+      if (goBtn) goBtn.addEventListener("click", function(){ showView("business"); });
+    }
+  }
+  renderChatLock();
+
+  document.getElementById("chatSend").addEventListener("click", sendChat);
+  document.getElementById("chatInput").addEventListener("keydown", function(e){
+    if (e.key === "Enter") sendChat();
+  });
+
+  function sendChat(){
+    var input = document.getElementById("chatInput");
+    var text = input.value.trim();
+    if (!text) return;
+    var myLang = document.getElementById("myLang").value;
+    var theirLang = document.getElementById("theirLang").value;
+
+    // Show my message as sent (in my language)
+    addMessage(text, "me", false);
+    input.value = "";
+
+    // Simulate the other side receiving the message
+    if (isBusinessActive()) {
+      var incoming = addMessage(text, "them", true);
+      translateText(text, myLang, theirLang, function(ok, translated){
+        finishTranslation(incoming, translated, langNames[myLang] || myLang, ok);
+      });
+    } else {
+      addMessage(text, "them", false);
+    }
+  }
+
+  /* ---------------- Business / payments ---------------- */
+  document.getElementById("iqdAmount").textContent =
+    (10 * USD_TO_IQD).toLocaleString("en-US");
+
+  document.querySelectorAll(".copy-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var val = btn.getAttribute("data-copy");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(val).then(function(){
+          var old = btn.textContent;
+          btn.textContent = "کۆپی کرا ✓";
+          setTimeout(function(){ btn.textContent = old; }, 1500);
+        }).catch(function(){});
+      }
+    });
+  });
+
+  function buildWaLink(message){
+    return "https://wa.me/" + PHONE + "?text=" + encodeURIComponent(message);
+  }
+  document.getElementById("waLink").href = buildWaLink("سڵاو، ئەمە پسوولەی پارەدانمە بۆ هەژماری بازرگانی FaceApp.");
+
+  function renderActivationStatus(){
+    var el = document.getElementById("activationStatus");
+    el.textContent = isBusinessActive() ? "✅ هەژمارەکەت چالاکە." : "";
+    el.style.color = "var(--teal)";
+  }
+  renderActivationStatus();
+
+  document.getElementById("activateBtn").addEventListener("click", function(){
+    var code = document.getElementById("activationCode").value.trim();
+    var el = document.getElementById("activationStatus");
+    if (code === ACTIVATION_CODE) {
+      try { localStorage.setItem(ACTIVE_KEY, "1"); } catch(e){}
+      el.style.color = "var(--teal)";
+      el.textContent = "✅ چالاک کرا! ئێستا دەتوانیت لە چاتدا وەرگێڕانی خۆکار بەکاربهێنیت.";
+      renderChatLock();
+    } else {
+      el.style.color = "var(--red)";
+      el.textContent = "❌ کۆدەکە هەڵەیە.";
+    }
+  });
+
+  document.getElementById("bizRequestBtn").addEventListener("click", function(){
+    var name = document.getElementById("bizName").value.trim();
+    var phone = document.getElementById("bizPhone").value.trim();
+    if (!name || !phone) {
+      alert("تکایە ناو و ژمارەی تەلەفۆن پڕبکەرەوە.");
+      return;
+    }
+    var msg = "داواکاری هەژماری بازرگانی FaceApp:\nناو: " + name + "\nتەلەفۆن: " + phone;
+    window.open(buildWaLink(msg), "_blank", "noopener");
+  });
+
+})();
+</script>
+</body>
+</html>
